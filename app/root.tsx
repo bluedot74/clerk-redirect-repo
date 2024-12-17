@@ -1,13 +1,20 @@
 import {
-  isRouteErrorResponse,
+  ClerkProvider,
+  RedirectToSignIn,
+  SignedOut,
+} from "@clerk/react-router";
+import { rootAuthLoader } from "@clerk/react-router/ssr.server";
+import {
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
+  isRouteErrorResponse,
 } from "react-router";
 
 import type { Route } from "./+types/root";
+
 import stylesheet from "./app.css?url";
 
 export const links: Route.LinksFunction = () => [
@@ -42,8 +49,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
-  return <Outlet />;
+export default function App({ loaderData }: Route.ComponentProps) {
+  return (
+    <ClerkProvider
+      loaderData={loaderData}
+      signUpFallbackRedirectUrl="/"
+      signInFallbackRedirectUrl="/"
+      afterSignOutUrl="/"
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+    >
+      <SignedOut>
+        <RedirectToSignIn />
+      </SignedOut>
+      <Outlet />
+    </ClerkProvider>
+  );
+}
+
+export async function loader(args: Route.LoaderArgs) {
+  return rootAuthLoader(args);
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
